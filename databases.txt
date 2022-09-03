@@ -58,21 +58,6 @@ from(
      FROM Printer )p join 
 Product on Product.model=p.model
 WHERE Product.maker='B'
-
-/*SELECT DISTINCT  PC.model, PC.price
-FROM Product INNER JOIN 
-PC ON PC.model=Product.model
-WHERE Product.maker='B'
-UNION 
-SELECT DISTINCT Laptop.model,Laptop.price
-FROM Product INNER JOIN 
-Laptop ON Laptop.model=Product.model
-WHERE Product.maker='B'
-UNION 
-SELECT DISTINCT Printer.model,Printer.price
-FROM Product INNER JOIN 
-Printer ON Printer.model=Product.model
-WHERE Product.maker='B'*/
 ************************************************************************************************************************
 Задание: 8 (Serge I: 2003-02-03)
 Найдите производителя, выпускающего ПК, но не ПК-блокноты.
@@ -83,15 +68,6 @@ WHERE type ='PC'AND maker NOT IN (
                                 SELECT DISTINCT maker
                                 FROM Product
                                 WHERE type ='Laptop')
-
-
-/*SELECT DISTINCT maker
-FROM Product
-WHERE type ='PC'
-EXCEPT
-SELECT DISTINCT maker
-FROM Product
-WHERE type ='Laptop'*/
 ************************************************************************************************************************
 Задание: 9 (Serge I: 2002-11-02)
 Найдите производителей ПК с процессором не менее 450 Мгц. Вывести: Maker
