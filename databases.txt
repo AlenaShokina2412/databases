@@ -123,3 +123,231 @@ FROM PC
 GROUP BY(hd)
 HAVING COUNT(hd)>=2
 ************************************************************************************************************************
+Задание: 16 (Serge I: 2003-02-03)
+Найдите пары моделей PC, имеющих одинаковые скорость и RAM. В результате каждая пара указывается только один раз, т.е. (i,j), но не (j,i), Порядок вывода: модель с большим номером, модель с меньшим номером, скорость и RAM.
+
+SELECT DISTINCT p1.model, p2.model, p1.speed, p1.ram
+FROM PC p1 join  PC p2 on p1.speed= p2.speed AND p1.ram = p2.ram AND p1.model> p2.model
+************************************************************************************************************************
+Задание: 17 (Serge I: 2003-02-03)
+Найдите модели ПК-блокнотов, скорость которых меньше скорости каждого из ПК.
+Вывести: type, model, speed
+
+SELECT DISTINCT 'Laptop' as type, model, speed
+FROM Laptop  
+WHERE Laptop.speed<ALL(SELECT speed
+                      FROM PC)
+************************************************************************************************************************
+Задание: 18 (Serge I: 2003-02-03)
+Найдите производителей самых дешевых цветных принтеров. Вывести: maker, price
+
+SELECT DISTINCT Product.maker,  Printer.price
+FROM Printer  JOIN
+Product ON  Product.model = Printer.model
+WHERE  Printer.color = 'y' AND Printer.price=(SELECT MIN(price) FROM Printer WHERE Printer.color = 'y')
+************************************************************************************************************************
+Задание: 19 (Serge I: 2003-02-13)
+Для каждого производителя, имеющего модели в таблице Laptop, найдите средний размер экрана выпускаемых им ПК-блокнотов.
+Вывести: maker, средний размер экрана.
+
+SELECT Product.maker, avg(screen) as avg_screen
+FROM Laptop JOIN
+Product ON Product.model = Laptop.model
+GROUP BY Product.maker
+************************************************************************************************************************
+Задание: 20 (Serge I: 2003-02-13)
+Найдите производителей, выпускающих по меньшей мере три различных модели ПК. Вывести: Maker, число моделей ПК.
+
+SELECT maker, COUNT(model) AS count_model
+FROM Product
+WHERE type='pc'
+GROUP BY Product.maker
+HAVING COUNT (DISTINCT model) >= 3
+************************************************************************************************************************
+Задание: 21 (Serge I: 2003-02-13)
+Найдите максимальную цену ПК, выпускаемых каждым производителем, у которого есть модели в таблице PC.
+Вывести: maker, максимальная цена.
+
+SELECT Product.maker, MAX(price)
+FROM PC JOIN
+Product ON PC.model=Product.model
+GROUP BY Product.maker
+************************************************************************************************************************
+Задание: 22 (Serge I: 2003-02-13)
+Для каждого значения скорости ПК, превышающего 600 МГц, определите среднюю цену ПК с такой же скоростью. Вывести: speed, средняя цена.
+
+SELECT speed, AVG(price)
+FROM PC
+WHERE speed > 600
+GROUP BY speed
+************************************************************************************************************************
+Задание: 23 (Serge I: 2003-02-14)
+Найдите производителей, которые производили бы как ПК
+со скоростью не менее 750 МГц, так и ПК-блокноты со скоростью не менее 750 МГц.
+Вывести: Maker
+************************************************************************************************************************
+SELECT DISTINCT maker
+FROM Product JOIN 
+PC ON PC.model=Product.model
+WHERE speed>=750 AND maker IN
+( SELECT maker
+FROM Product JOIN
+Laptop  ON Product.model=Laptop.model
+WHERE speed>=750 )
+************************************************************************************************************************
+Задание: 24 (Serge I: 2003-02-03)
+Перечислите номера моделей любых типов, имеющих самую высокую цену по всей имеющейся в базе данных продукции.
+
+WITH Inc_Out AS (  
+      SELECT model, price
+ 	FROM pc
+      UNION
+      SELECT model, price
+ 	FROM Laptop
+      UNION
+      SELECT model, price
+	FROM Printer ) 
+
+SELECT  model 
+FROM Inc_Out 
+WHERE price =  ( SELECT MAX(price) FROM Inc_Out)
+************************************************************************************************************************
+Задание: 25 (Serge I: 2003-02-14)
+Найдите производителей принтеров, которые производят ПК с наименьшим объемом RAM и с самым быстрым процессором среди всех ПК, имеющих наименьший объем RAM. Вывести: Maker
+
+SELECT DISTINCT maker
+FROM product
+WHERE model IN (
+	SELECT model
+	FROM pc
+	WHERE ram = (
+  		SELECT MIN(ram)
+  		FROM pc
+  	)
+	AND speed = (
+ 		SELECT MAX(speed)
+  		FROM pc
+  		WHERE ram = (
+   			SELECT MIN(ram)
+   			FROM pc
+   		)
+  	)
+)
+AND
+maker IN (
+	SELECT maker
+	FROM product
+	WHERE type='printer'
+)
+************************************************************************************************************************
+Задание: 26 (Serge I: 2003-02-14)
+Найдите среднюю цену ПК и ПК-блокнотов, выпущенных производителем A (латинская буква). Вывести: одна общая средняя цена.
+
+SELECT AVG(price) AS count_price
+FROM (  SELECT price,model
+	FROM PC 
+        UNION ALL
+	SELECT price,model
+	FROM Laptop 
+)P1 JOIN 
+Product on Product.model=P1.model
+where Product.maker='A'
+************************************************************************************************************************
+Задание: 27 (Serge I: 2003-02-03)
+Найдите средний размер диска ПК каждого из тех производителей, которые выпускают и принтеры. Вывести: maker, средний размер HD.
+
+SELECT maker, AVG(hd) AS AVG_HD
+FROM PC JOIN
+Product ON PC.model=Product.model
+WHERE maker IN (  SELECT DISTINCT maker
+                          FROM Product
+                         WHERE type='Printer'
+)
+GROUP BY MAKER
+************************************************************************************************************************
+Задание: 28 (Serge I: 2012-05-04)
+Используя таблицу Product, определить количество производителей, выпускающих по одной модели.
+
+SELECT COUNT(maker) AS COUNT_MAKER
+FROM Product
+WHERE maker IN(SELECT maker 
+  FROM Product
+  GROUP BY maker
+  HAVING COUNT(model) = 1
+)
+************************************************************************************************************************
+Задание: 29 (Serge I: 2003-02-14)
+В предположении, что приход и расход денег на каждом пункте приема фиксируется не чаще одного раза в день [т.е. первичный ключ (пункт, дата)], написать запрос с выходными данными (пункт, дата, приход, расход). Использовать таблицы Income_o и Outcome_o.
+
+SELECT
+COALESCE(Income_o.point, Outcome_o.point) point,
+COALESCE(Income_o.date, Outcome_o.date) date,
+Income_o.inc,Outcome_o.out
+FROM Income_o FULL JOIN Outcome_o on Income_o.date=Outcome_o.date and Income_o.point=Outcome_o.point
+************************************************************************************************************************
+Задание: 30 (Serge I: 2003-02-14)
+В предположении, что приход и расход денег на каждом пункте приема фиксируется произвольное число раз (первичным ключом в таблицах является столбец code), требуется получить таблицу, в которой каждому пункту за каждую дату выполнения операций будет соответствовать одна строка.
+Вывод: point, date, суммарный расход пункта за день (out), суммарный приход пункта за день (inc). Отсутствующие значения считать неопределенными (NULL).
+
+SELECT COALESCE(a.point,b.point) point, COALESCE(a.date,b.date) date, sum(b.Out), sum(a.Inc)
+FROM 
+( 
+ SELECT date, point, SUM(inc) as Inc,code 
+ FROM Income 
+ GROUP BY date, point ,code
+) A
+FULL JOIN
+(SELECT date, point,SUM(out) as Out,code
+ FROM Outcome 
+ GROUP BY date, point , code
+) B
+ON A.code = B.code and a.point=b.point and a.date=b.date
+Group by COALESCE(a.point,b.point),COALESCE(a.date,b.date)
+************************************************************************************************************************
+Задание: 31 (Serge I: 2002-10-22)
+Для классов кораблей, калибр орудий которых не менее 16 дюймов, укажите класс и страну.
+
+SELECT DISTINCT class, country
+FROM classes
+WHERE bore >= 16
+************************************************************************************************************************
+Задание: 32 (Serge I: 2003-02-17)
+Одной из характеристик корабля является половина куба калибра его главных орудий (mw). С точностью до 2 десятичных знаков определите среднее значение mw для кораблей каждой страны, у которой есть корабли в базе данных
+
+SELECT country,CAST(AVG(POWER(bor.BORE,3)/2) AS NUMERIC(6,2)) as weight
+FROM( 
+     SELECT bore as BORE,name,country
+    FROM Classes class1 JOIN Ships ON Ships.class=class1.class
+      UNION 
+    SELECT bore as BORE,ship,country
+    FROM Classes class2 join Outcomes ON Outcomes.ship=class2.class
+)as bor
+GROUP BY country
+************************************************************************************************************************
+Задание: 33 (Serge I: 2002-11-02)
+Укажите корабли, потопленные в сражениях в Северной Атлантике (North Atlantic). Вывод: ship.
+
+SELECT ship
+FROM Outcomes
+WHERE battle='North Atlantic' AND result='sunk'
+************************************************************************************************************************
+
+Задание: 34 (Serge I: 2002-11-04)
+По Вашингтонскому международному договору от начала 1922 г. запрещалось строить линейные корабли водоизмещением более 35 тыс.тонн. Укажите корабли, нарушившие этот договор (учитывать только корабли c известным годом спуска на воду). Вывести названия кораблей
+
+Select name
+From ships,classes
+Where displacement>35000 and launched>=1922 and type='bb' and ships.class = classes.class
+Group by name
+************************************************************************************************************************
+Задание: 35 (qwrqwr: 2012-11-23)
+В таблице Product найти модели, которые состоят только из цифр или только из латинских букв (A-Z, без учета регистра).
+Вывод: номер модели, тип модели.
+
+select model, type
+from product
+WHERE model NOT LIKE '%[^A-Z]%' OR model NOT LIKE '%[^0-9]%'
+
+
+
+
