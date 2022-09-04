@@ -347,7 +347,65 @@ Group by name
 select model, type
 from product
 WHERE model NOT LIKE '%[^A-Z]%' OR model NOT LIKE '%[^0-9]%'
+************************************************************************************************************************
+Задание: 103 (qwrqwr: 2013-05-17)
+Выбрать три наименьших и три наибольших номера рейса. Вывести их в шести столбцах одной строки, расположив в порядке от наименьшего к наибольшему.
+Замечание: считать, что таблица Trip содержит не менее шести строк.
 
+select min(t.trip_no), min(tt.trip_no), min(ttt.trip_no),max(ttt.trip_no), max(tt.trip_no), max(t.trip_no)
+from trip t,trip tt,trip ttt
+where t.trip_no in(select min(trip_no) 
+                   from trip 
+                   union 
+                   select max(trip_no) 
+                   from trip 
+)
+and tt.trip_no in(select min(trip_no) 
+                   from trip 
+                   where trip_no <>(select min(trip_no) from trip )
+                   union 
+                   select max(trip_no) 
+                   from trip 
+                   where trip_no <>(select max(trip_no) from trip)
+        )
+and ttt.trip_no in(select min(trip_no) 
+                   from trip 
+                   where trip_no <>(select min(trip_no) from trip ) and 
+                   trip_no <>(select min(trip_no) 
+                   from trip 
+                   where trip_no <>(select min(trip_no) from trip ))
+                   union 
+                   select max(trip_no) 
+                   from trip 
+                   where trip_no <>(select max(trip_no) from trip) and trip_no <>(select max(trip_no) 
+                   from trip 
+                   where trip_no <>(select max(trip_no) from trip))
+        )
+************************************************************************************************************************
+Задание: 110 (Serge I: 2003-12-24)
+Определить имена разных пассажиров, когда-либо летевших рейсом, который вылетел в субботу, а приземлился в воскресенье.
 
+Select name
+From Passenger
+Where ID_psg in(select id
+from (select pt.ID_psg as id, case when time_out > time_in then 1 else 0 end as p
+From Trip t Join Pass_in_trip pt On t.trip_no=pt.trip_no
+Where DATEPART(dw, pt.date) = 7
+)tab
+where p=1)
 
+************************************************************************************************************************
+Задание: 114 (Serge I: 2003-04-08)
+Определить имена разных пассажиров, которым чаще других доводилось лететь на одном и том же месте. Вывод: имя и количество полетов на одном и том же месте.
 
+With Tab2 as 
+(	Select DISTINCT ID_psg, count(*) cnt
+	FROM Pass_In_Trip
+	GROUP BY ID_psg, place
+        HAVING count(*)= (select max(cnt)from(Select count(*) cnt
+	                                      FROM Pass_In_Trip
+	                                      GROUP BY ID_psg, place)as Tab1
+                          )
+)
+select name, cnt
+from Tab2 join Passenger on Passenger.ID_psg=Tab2.ID_psg
