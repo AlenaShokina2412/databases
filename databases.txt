@@ -348,6 +348,60 @@ select model, type
 from product
 WHERE model NOT LIKE '%[^A-Z]%' OR model NOT LIKE '%[^0-9]%'
 ************************************************************************************************************************
+Задание: 36 (Serge I: 2003-02-17)
+Перечислите названия головных кораблей, имеющихся в базе данных (учесть корабли в Outcomes).
+
+SELECT Ships.name
+FROM Ships
+WHERE class=name
+union 
+SELECT Outcomes.ship
+FROM Outcomes, Classes 
+where Classes.class=Outcomes.ship
+************************************************************************************************************************
+Задание: 37 (Serge I: 2003-02-17)
+Найдите классы, в которые входит только один корабль из базы данных (учесть также корабли в Outcomes).
+
+SELECT Classes.class
+FROM Classes LEFT JOIN 
+(
+  SELECT class,name
+  From Ships
+  Union 
+  SELECT ship, ship
+  From Outcomes
+) Name_ship on Name_ship.class = Classes.class
+GROUP BY Classes.class
+HAVING COUNT(Name_ship.name) = 1
+************************************************************************************************************************
+Задание: 38 (Serge I: 2003-02-19)
+Найдите страны, имевшие когда-либо классы обычных боевых кораблей ('bb') и имевшие когда-либо классы крейсеров ('bc').
+
+SELECT country
+From Classes 
+Where type='bb' 
+INTERSECT
+SELECT country
+From Classes 
+Where type='bc'
+************************************************************************************************************************
+Задание: 39 (Serge I: 2003-02-14)
+Найдите корабли, `сохранившиеся для будущих сражений`; т.е. выведенные из строя в одной битве (damaged), они участвовали в другой, произошедшей позже.
+
+SELECT DISTINCT outcome.ship 
+FROM Outcomes outcome JOIN 
+Battles battle ON outcome.battle = battle.name 
+WHERE outcome.result = 'damaged' AND EXISTS(
+	SELECT Outcomes.ship
+	FROM Battles JOIN 
+	Outcomes ON Outcomes.battle = Battles.name
+	WHERE Battles.date > battle.date and Outcomes.ship = outcome.ship
+)
+************************************************************************************************************************
+************************************************************************************************************************
+
+************************************************************************************************************************
+
 Задание: 103 (qwrqwr: 2013-05-17)
 Выбрать три наименьших и три наибольших номера рейса. Вывести их в шести столбцах одной строки, расположив в порядке от наименьшего к наибольшему.
 Замечание: считать, что таблица Trip содержит не менее шести строк.
